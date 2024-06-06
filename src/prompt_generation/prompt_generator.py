@@ -1,4 +1,5 @@
 import os
+import csv
 from dotenv import load_dotenv
 import bs4
 from langchain import hub
@@ -72,20 +73,24 @@ def main():
     # Generate initial prompts
     prompts = generate_prompts(description, scenarios)
     
-    # Example: Load and index a document from the web
-    url = "https://lilianweng.github.io/posts/2023-06-23-agent/"
-    vectorstore = load_and_index_document(url)
-    
-    # Retrieve and generate a response using RAG
-    retriever = vectorstore.as_retriever()
-    response = rag_generate("What is Task Decomposition?", retriever)
-    
-    print("Generated Prompts:")
-    for prompt in prompts:
-        print(prompt)
-    
-    print("\nRAG Response:")
-    print(response)
+    # Load URLs from links.csv in the data directory
+    csv_file = os.path.join("data", "links.csv")
+    with open(csv_file, "r", newline="") as file:
+        reader = csv.reader(file)
+        for row in reader:
+            url = row[0]
+            print(f"\nProcessing URL: {url}")
+            
+            # Load and index document from the URL
+            vectorstore = load_and_index_document(url)
+            
+            # Retrieve and generate response using RAG
+            retriever = vectorstore.as_retriever()
+            for prompt in prompts:
+                print(f"\nPrompt: {prompt}")
+                response = rag_generate(prompt, retriever)
+                print("RAG Response:")
+                print(response)
 
 if __name__ == "__main__":
     main()
