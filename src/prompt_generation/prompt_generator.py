@@ -74,7 +74,7 @@ def main():
     prompts = generate_prompts(description, scenarios)
     
     # Load URLs from links.csv in the data directory
-    csv_file = os.path.join("data", "links.csv")
+    csv_file = os.path.join(os.path.dirname(__file__), "../../data/links.csv")
     with open(csv_file, "r", newline="") as file:
         reader = csv.reader(file)
         for row in reader:
