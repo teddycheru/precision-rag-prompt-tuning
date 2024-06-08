@@ -26,11 +26,21 @@ if not LANGCHAIN_API_KEY:
 # Initialize the language model
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
 
-# Function to generate prompts
-def generate_prompts(description, scenarios):
+# Enhanced function to generate prompts
+def generate_prompts(description, scenarios, target_audience=None, tone=None, additional_instructions=None):
     prompts = []
     for scenario in scenarios:
         prompt = f"{description} in the context of {scenario}"
+        
+        if target_audience:
+            prompt += f" for {target_audience}"
+        
+        if tone:
+            prompt += f" with a {tone} tone"
+        
+        if additional_instructions:
+            prompt += f". {additional_instructions}"
+        
         prompts.append(prompt)
     return prompts
 
@@ -69,9 +79,12 @@ def rag_generate(question, retriever):
 def main():
     description = "Explain the concept of RAG in AI"
     scenarios = ["in a business context", "for educational purposes", "for technical documentation"]
+    target_audience = "non-experts"
+    tone = "friendly"
+    additional_instructions = "Include examples where relevant."
     
     # Generate initial prompts
-    prompts = generate_prompts(description, scenarios)
+    prompts = generate_prompts(description, scenarios, target_audience, tone, additional_instructions)
     
     # Load URLs from links.csv in the data directory
     csv_file = os.path.join(os.path.dirname(__file__), "../../data/links.csv")
@@ -88,9 +101,13 @@ def main():
             retriever = vectorstore.as_retriever()
             for prompt in prompts:
                 print(f"\nPrompt: {prompt}")
-                response = rag_generate(prompt, retriever)
-                print("RAG Response:")
-                print(response)
+                try:
+                    response = rag_generate(prompt, retriever)
+                except Exception as e:
+                    print(f"Error generating RAG response: {e}")
+                else:
+                    print("RAG Response:")
+                    print(response)
 
 if __name__ == "__main__":
     main()
