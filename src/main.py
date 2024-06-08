@@ -13,8 +13,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 sys.path.append(os.path.abspath(os.path.join('..')))
 
-from src.prompt_generation.prompt_generator import generate_prompts
-from src.evaluation.evaluator import main as evaluate_prompts
+from prompt_generation.prompt_generator import generate_prompts
+from evaluation.evaluator import main as evaluate_prompts
 
 # Load environment variables from .env file
 load_dotenv()
@@ -63,24 +63,20 @@ def rag_generate(question, retriever):
     )
     return rag_chain.invoke(question)
 
+# Main function to orchestrate prompt generation and retrieval
 def main():
-    description = "Explain the concept of RAG in AI"
+    description = "Explain the concept of Task Decomposition in AI"
     scenarios = ["in a business context", "for educational purposes", "for technical documentation"]
+    target_audience = "non-experts"
+    tone = "friendly"
+    additional_instructions = "Include examples where relevant."
     
     # Generate initial prompts
-    prompts = generate_prompts(description, scenarios)
-    
-    # Save prompts to a CSV file
-    csv_file = os.path.join(os.path.dirname(__file__), "../data/generated_prompts.csv")
-    with open(csv_file, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["Prompt"])
-        for prompt in prompts:
-            writer.writerow([prompt])
+    prompts = generate_prompts(description, scenarios, target_audience, tone, additional_instructions)
     
     # Load URLs from links.csv in the data directory
-    links_file = os.path.join(os.path.dirname(__file__), "../data/links.csv")
-    with open(links_file, "r", newline="") as file:
+    csv_file = os.path.join(os.path.dirname(__file__), "../data/links.csv")
+    with open(csv_file, "r", newline="") as file:
         reader = csv.reader(file)
         for row in reader:
             url = row[0]
@@ -93,11 +89,13 @@ def main():
             retriever = vectorstore.as_retriever()
             for prompt in prompts:
                 print(f"\nPrompt: {prompt}")
-                response = rag_generate(prompt, retriever)
-                print("RAG Response:")
-    
-    # Evaluate the generated prompts
-    evaluate_prompts()
+                try:
+                    response = rag_generate(prompt, retriever)
+                except Exception as e:
+                    print(f"Error generating RAG response: {e}")
+                else:
+                    print("RAG Response:")
+                    print(response)
 
 if __name__ == "__main__":
     main()
