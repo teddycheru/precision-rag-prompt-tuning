@@ -1,8 +1,8 @@
+import streamlit as st
 import os
-import sys
 import csv
-from dotenv import load_dotenv
 import bs4
+from dotenv import load_dotenv
 from langchain import hub
 from langchain_community.document_loaders import WebBaseLoader
 from langchain_chroma import Chroma
@@ -10,11 +10,6 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-sys.path.append(os.path.abspath(os.path.join('..')))
-
-from prompt_generation.prompt_generator import generate_prompts
-from evaluation.evaluator import main as evaluate_prompts
 
 # Load environment variables from .env file
 load_dotenv()
@@ -31,6 +26,24 @@ if not LANGCHAIN_API_KEY:
 
 # Initialize the language model
 llm = ChatOpenAI(model="gpt-3.5-turbo-0125")
+
+# Enhanced function to generate prompts
+def generate_prompts(description, scenarios, target_audience=None, tone=None, additional_instructions=None):
+    prompts = []
+    for scenario in scenarios:
+        prompt = f"{description} in the context of {scenario}"
+        
+        if target_audience:
+            prompt += f" for {target_audience}"
+        
+        if tone:
+            prompt += f" with a {tone} tone"
+        
+        if additional_instructions:
+            prompt += f". {additional_instructions}"
+        
+        prompts.append(prompt)
+    return prompts
 
 # Function to load, chunk, and index the contents of a web document
 def load_and_index_document(url):
@@ -64,38 +77,43 @@ def rag_generate(question, retriever):
     return rag_chain.invoke(question)
 
 # Main function to orchestrate prompt generation and retrieval
-def main():
-    description = "Explain the concept of Task Decomposition in AI"
-    scenarios = ["in a business context", "for educational purposes", "for technical documentation"]
-    target_audience = "non-experts"
-    tone = "friendly"
-    additional_instructions = "Include examples where relevant."
-    
+def main(description, scenarios, target_audience, tone, additional_instructions, url=None, pdf_file=None):
     # Generate initial prompts
     prompts = generate_prompts(description, scenarios, target_audience, tone, additional_instructions)
     
-    # Load URLs from links.csv in the data directory
-    csv_file = os.path.join(os.path.dirname(__file__), "../data/links.csv")
-    with open(csv_file, "r", newline="") as file:
-        reader = csv.reader(file)
-        for row in reader:
-            url = row[0]
-            print(f"\nProcessing URL: {url}")
-            
-            # Load and index document from the URL
-            vectorstore = load_and_index_document(url)
-            
-            # Retrieve and generate response using RAG
-            retriever = vectorstore.as_retriever()
-            for prompt in prompts:
-                print(f"\nPrompt: {prompt}")
-                try:
-                    response = rag_generate(prompt, retriever)
-                except Exception as e:
-                    print(f"Error generating RAG response: {e}")
-                else:
-                    print("RAG Response:")
-                    print(response)
+    # Load document from URL or PDF
+    if url:
+        vectorstore = load_and_index_document(url)
+    elif pdf_file:
+        # Process the PDF file
+        pass
+    else:
+        st.error("Please provide either a URL or upload a PDF file.")
+        return
+    
+    # Retrieve and generate responses using RAG
+    retriever = vectorstore.as_retriever()
+    for prompt in prompts:
+        st.write(f"\nPrompt: {prompt}")
+        try:
+            response = rag_generate(prompt, retriever)
+        except Exception as e:
+            st.error(f"Error generating RAG response: {e}")
+        else:
+            st.write("RAG Response:")
+            st.write(response)
 
-if __name__ == "__main__":
-    main()
+# Streamlit UI
+st.title("RAG Response Generator")
+
+description = st.text_input("Enter what you are searching for")
+scenarios = st.text_area("Enter scenarios (comma-separated)").split(",")
+target_audience = st.selectbox("Select target audience", ["General", "Technical", "Corporate", "Educational"])
+tone = st.selectbox("Select tone", ["Formal", "Informal", "Professional", "Friendly"])
+additional_instructions = st.text_input("Additional instructions")
+url = st.text_input("Enter URL:")
+
+pdf_file = st.file_uploader("or Upload PDF file")
+
+if st.button("Generate Response"):
+    main(description, scenarios, target_audience, tone, additional_instructions, url=url, pdf_file=pdf_file)
