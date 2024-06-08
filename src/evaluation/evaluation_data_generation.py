@@ -75,6 +75,33 @@ def rag_generate(question, retriever):
     )
     return rag_chain.invoke(question)
 
+# Function to create evaluation data
+def create_evaluation_data(description, scenarios, blog_url):
+    vectorstore = load_and_index_document(blog_url)
+    retriever = vectorstore.as_retriever()
+    
+    evaluation_data = []
+    
+    prompts = generate_prompts(description, scenarios)
+    for prompt in prompts:
+        response = rag_generate(prompt, retriever)
+        evaluation_data.append({
+            "description": description,
+            "scenario": prompt,
+            "blog_url": blog_url,
+            "generated_response": response
+        })
+    
+    return evaluation_data
+
+# Save evaluation data to CSV
+def save_evaluation_data_to_csv(evaluation_data, file_path):
+    keys = evaluation_data[0].keys()
+    with open(file_path, 'w', newline='') as output_file:
+        dict_writer = csv.DictWriter(output_file, fieldnames=keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(evaluation_data)
+
 # Main function to orchestrate prompt generation and retrieval
 def main():
     description = "Explain the concept of RAG in AI"
@@ -95,19 +122,35 @@ def main():
             print(f"\nProcessing URL: {url}")
             
             # Load and index document from the URL
-            vectorstore = load_and_index_document(url)
+            try:
+                vectorstore = load_and_index_document(url)
+            except Exception as e:
+                print(f"Error loading and indexing document from URL {url}: {e}")
+                continue
             
             # Retrieve and generate response using RAG
             retriever = vectorstore.as_retriever()
+            evaluation_data = []  # Initialize evaluation data list
             for prompt in prompts:
                 print(f"\nPrompt: {prompt}")
                 try:
                     response = rag_generate(prompt, retriever)
-                except Exception as e:
-                    print(f"Error generating RAG response: {e}")
-                else:
                     print("RAG Response:")
                     print(response)
+                    evaluation_data.append({
+                        "description": description,
+                        "scenario": prompt,
+                        "blog_url": url,
+                        "generated_response": response
+                    })  # Add data to evaluation_data list
+                except Exception as e:
+                    print(f"Error generating RAG response for prompt '{prompt}': {e}")
+            
+            # Save evaluation data to CSV
+            eval_data_csv_path = os.path.join(os.path.dirname(__file__), "../../data/evaluation_data.csv")
+            save_evaluation_data_to_csv(evaluation_data, eval_data_csv_path)  # Save data to CSV
 
 if __name__ == "__main__":
     main()
+
+
