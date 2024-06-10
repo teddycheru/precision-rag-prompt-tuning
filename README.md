@@ -37,9 +37,9 @@ https://github.com/teddycheru/Precision_RAG_Prompt_Tuning.git
 
 1. Modify the parameters in `evaluation_data_generation.py` as needed, such as description, scenarios, target audience, tone, additional instructions, and ground truth file.
 
-2. Run the script: `python3 src/main.py`
+2. Run the script: `streamlit run src/main.py`
 
-3. Evaluation data will be generated and saved in `/data/evaluation_data.csv`.
+4. Evaluation data will be generated and saved in `/data/evaluation_data.csv`.
 
 ## Acknowledgements
 
