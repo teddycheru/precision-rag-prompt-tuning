@@ -2,7 +2,7 @@
 
 ## Overview
 
-Precision RAG Prompt Tuning is a project aimed at improving the performance of the Retrieval-Augmented Generation (RAG) model through prompt tuning. The project involves generating prompts automatically, retrieving relevant information from web documents, and evaluating the quality of generated responses.
+Precision RAG Prompt Tuning is a project aimed at enhancing the performance of the Retrieval-Augmented Generation (RAG) model through advanced prompt tuning techniques. The project involves automatically generating prompts based on user queries and specific scenarios, retrieving relevant information from web documents, and incorporating external sources such as blog links and PDF data to provide comprehensive responses. By evaluating the quality and accuracy of the generated responses, this project seeks to refine the RAG model's ability to deliver precise and contextually relevant information, thereby improving its overall effectiveness.
 
 ## Features
 
