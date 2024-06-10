@@ -41,14 +41,6 @@ https://github.com/teddycheru/Precision_RAG_Prompt_Tuning.git
 
 3. Evaluation data will be generated and saved in `/data/evaluation_data.csv`.
 
-## Contributing
-
-Contributions are welcome! Please fork the repository, make your changes, and submit a pull request. Ensure that your code follows the project's coding style and conventions.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Acknowledgements
 
 - [OpenAI](https://openai.com) for providing the GPT-3 model and API.
